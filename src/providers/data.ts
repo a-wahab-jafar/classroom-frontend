@@ -1,30 +1,24 @@
+import { Subject } from "@/types";
 import { BaseRecord, DataProvider, GetListParams, GetListResponse } from "@refinedev/core";
 
-export interface Subject extends BaseRecord {
-  id: string;
-  code: string;
-  name: string;
-  department: string;
-  description: string;
-}
 
 const mockSubjects: Subject[] = [
   {
-    id: "1",
+    id: 1,
     code: "CS101",
     name: "Introduction to Computer Science",
     department: "Computer Science",
     description: "A foundational course covering basic programming concepts, algorithms, and computational thinking. Students learn the fundamentals of software development and problem-solving techniques.",
   },
   {
-    id: "2",
+    id: 2,
     code: "MATH201",
     name: "Calculus II",
     department: "Mathematics",
     description: "Advanced calculus covering integration techniques, differential equations, and series. This course builds upon Calculus I and prepares students for advanced mathematical analysis.",
   },
   {
-    id: "3",
+    id: 3,
     code: "PHY150",
     name: "Physics for Engineers",
     department: "Physics",
