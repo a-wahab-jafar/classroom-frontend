@@ -1,48 +1,70 @@
-import { Subject } from "@/types";
-import { BaseRecord, DataProvider, GetListParams, GetListResponse } from "@refinedev/core";
-
-
-const mockSubjects: Subject[] = [
-  {
-    id: 1,
-    code: "CS101",
-    name: "Introduction to Computer Science",
-    department: "Computer Science",
-    description: "A foundational course covering basic programming concepts, algorithms, and computational thinking. Students learn the fundamentals of software development and problem-solving techniques.",
-  },
-  {
-    id: 2,
-    code: "MATH201",
-    name: "Calculus II",
-    department: "Mathematics",
-    description: "Advanced calculus covering integration techniques, differential equations, and series. This course builds upon Calculus I and prepares students for advanced mathematical analysis.",
-  },
-  {
-    id: 3,
-    code: "PHY150",
-    name: "Physics for Engineers",
-    department: "Physics",
-    description: "A comprehensive introduction to classical mechanics, thermodynamics, and waves. Designed for engineering students with emphasis on practical applications and laboratory work.",
-  },
-];
-
-export const dataProvider: DataProvider ={
-  getList: async <Tdata extends BaseRecord = BaseRecord>({resource}:
-    GetListParams): Promise<GetListResponse<Tdata>> => {
-      if(resource !== 'subjects') return {
-        data: [] as Tdata[],
-        total: 0
-      } 
-      return {
-        data: mockSubjects as unknown as Tdata[],
-        total: mockSubjects.length
-      }
-    },
-    getOne: async () => {throw new Error('this function is not implemented')},
-    create: async () => {throw new Error('this function is not implemented')},
-    update: async () => {throw new Error('this function is not implemented')},
-    deleteOne: async () => {throw new Error('this function is not implemented')}, 
-
-    getApiUrl: () => '',
+import { BACKEND_BASE_URL } from "@/constants";
+import { ListResponse } from "@/types";
+import { CreateDataProviderOptions, createDataProvider } from "@refinedev/rest";
+if (!BACKEND_BASE_URL) {
+  throw new Error("BACKEND_BASE_URL is not defined in environment variables");
 }
+const options: CreateDataProviderOptions = {
+  getList: {
+    getEndpoint: ({ resource }) => resource,
 
+    buildQueryParams: async ({ resource, pagination, filters }) => {
+      const params: Record<string, string | number> = {};
+
+      if (pagination?.mode !== "off") {
+        const page = pagination?.currentPage ?? 1;
+        const pageSize = pagination?.pageSize ?? 10;
+
+        params.page = page;
+        params.limit = pageSize;
+      }
+
+      filters?.forEach((filter) => {
+        const field = "field" in filter ? filter.field : "";
+        const value = String(filter.value);
+
+        if (field === "role") {
+          params.role = value;
+        }
+
+        if (resource === "departments") {
+          if (field === "name" || field === "code") params.search = value;
+        }
+
+        if (resource === "users") {
+          if (field === "search" || field === "name" || field === "email") {
+            params.search = value;
+          }
+        }
+
+        if (resource === "subjects") {
+          if (field === "department") params.department = value;
+          if (field === "name" || field === "code") params.search = value;
+        }
+
+        if (resource === "classes") {
+          if (field === "name") params.search = value;
+          if (field === "subject") params.subject = value;
+          if (field === "teacher") params.teacher = value;
+        }
+      });
+
+      return params;
+    },
+
+
+      mapResponse: async (response) => {
+      const payload: ListResponse = await response.clone().json();
+      return payload.data ?? [];
+    },
+
+    getTotalCount: async (response) => {
+      const payload: ListResponse = await response.clone().json();
+      return payload.pagination?.total ?? payload.data?.length ?? 0;
+    },
+  },
+};
+
+const { dataProvider } = createDataProvider(BACKEND_BASE_URL, options);
+
+export { dataProvider };
