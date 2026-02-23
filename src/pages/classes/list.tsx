@@ -1,9 +1,9 @@
 import React from 'react'
 
-const list = () => {
+const ClassesList = () => {
   return (
-    <div>list</div>
+    <div>ClassesList</div>
   )
 }
 
-export default list
+export default ClassesList
